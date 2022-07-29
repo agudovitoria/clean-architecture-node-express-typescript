@@ -19,9 +19,6 @@ import UserRepository, { UserEntityRepository } from './infrastructure/repositor
 import UserService, { UserModelService } from './application/service/UserService';
 import UserController, { UserModelController } from './infrastructure/rest/controllers/UserController';
 import UserRoute from './application/routes/UserRoute';
-import StatusRoute from './application/routes/StatusRoute';
-import RetrieveUsersUseCase from './application/usecases/users/RetrieveUsersUseCase';
-import CreateUserUseCase from './application/usecases/users/CreateUserUseCase';
 
 const configPath = path.join(__dirname, process.env.NODE_ENV ? `../.env.${process.env.NODE_ENV}` : '.env');
 
@@ -30,29 +27,12 @@ dotenv.config({ path: configPath });
 const environmentMode: string = process.env.NODE_ENV || 'production';
 // eslint-disable-next-line no-console
 console.info(`Started on ${environmentMode} mode`);
-const isProd = environmentMode === 'production';
+const isDev: boolean = environmentMode === 'development';
 
 const loggerOptions: LoggerOptions = {
-  level: isProd ? 'info' : 'debug',
-  format: format.combine(
-    format.timestamp({
-      format: 'DD/MM/YY HH:mm:ss'
-    }),
-    format.errors({ stack: true }),
-    format.splat(),
-    format.json()
-  ),
-  transports: isProd
-    ? []
-    : [
-      new transports.Console({
-        format: format.combine(
-          format.colorize(),
-          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-          format.printf(({ timestamp, level, message }) => `${timestamp} ${level}: ${message}`)
-        )
-      })
-    ]
+  level: isDev ? 'debug' : 'info',
+  format: format.json(),
+  transports: [new transports.Console()],
 };
 
 // Logging DI resolutions
@@ -62,15 +42,12 @@ container.registerInstance<Logger>('Logger', createLogger(loggerOptions));
 container.registerInstance<string>('DbConnection', process.env.MONGO_DB_CONNECTION || '');
 
 // Generic DI resolutions
-container.registerSingleton<StatusRoute>('StatusRoute', StatusRoute);
 container.registerSingleton<DefaultRoute>('DefaultRoute', DefaultRoute);
 
 // User domain DI resolutions
 container.registerSingleton<UserModelMapper>('UserMapper', UserMapper);
 container.registerInstance<UserEntityModel>('UserModel', UserModel);
 container.registerSingleton<UserEntityRepository>('UserRepository', UserRepository);
-container.registerSingleton<CreateUserUseCase>('CreateUserUseCase', CreateUserUseCase);
-container.registerSingleton<RetrieveUsersUseCase>('RetrieveUsersUseCase', RetrieveUsersUseCase);
 container.registerSingleton<UserModelService>('UserService', UserService);
 container.registerSingleton<UserModelController>('UserController', UserController);
 container.registerSingleton<UserRoute>('UserRoute', UserRoute);
