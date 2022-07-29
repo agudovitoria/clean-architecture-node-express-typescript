@@ -4,20 +4,16 @@ import Mapper from '../../domain/interfaces/Mapper';
 import User from '../../domain/User';
 import UserEntity from '../../domain/entity/UserEntity';
 
+export type UserModelMapper = Mapper<UserDTO, User, UserEntity>;
 @injectable()
-class UserMapper implements Mapper<UserDTO, User, UserEntity> {
+class UserMapper implements UserModelMapper {
   // TODO: Validate with TS types
   validateDto(userDto: UserDTO) {
     const {
-      id,
       firstName,
       firstSurname,
       email,
     } = userDto;
-
-    if (!id) {
-      throw new Error('Cannot find id on UserDTO');
-    }
 
     if (!firstName) {
       throw new Error('Cannot find firstName on UserDTO');

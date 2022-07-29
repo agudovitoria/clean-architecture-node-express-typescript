@@ -1,39 +1,86 @@
 import 'reflect-metadata';
-import { urlencoded, json } from 'body-parser';
-import express, { Express } from 'express';
-import { inject, injectable } from 'tsyringe';
-import { Logger } from 'winston';
-import Route from './domain/interfaces/Route';
+import dotenv from 'dotenv';
+import { container } from 'tsyringe';
+import {
+  createLogger,
+  format,
+  Logger,
+  LoggerOptions,
+  transports,
+} from 'winston';
 
-@injectable()
-class App {
-  private app: Express = express();
+import path from 'path';
+import App from './application/App';
+import DefaultRoute from './application/routes/DefaultRoute';
+import MongoDBConnection from './infrastructure/repository/mongodb/MongoDBConnection';
+import UserMapper, { UserModelMapper } from './application/mapper/UserMapper';
+import UserModel, { UserEntityModel } from './infrastructure/repository/mongodb/model/UserModel';
+import UserRepository, { UserEntityRepository } from './infrastructure/repository/mongodb/UserRepository';
+import UserService, { UserModelService } from './application/service/UserService';
+import UserController, { UserModelController } from './infrastructure/rest/controllers/UserController';
+import UserRoute from './application/routes/UserRoute';
+import StatusRoute from './application/routes/StatusRoute';
+import RetrieveUsersUseCase from './application/usecases/users/RetrieveUsersUseCase';
+import CreateUserUseCase from './application/usecases/users/CreateUserUseCase';
 
-  private port = process.env.PORT || '8080';
+const configPath = path.join(__dirname, process.env.NODE_ENV ? `../.env.${process.env.NODE_ENV}` : '.env');
 
-  constructor(
-  @inject('UserRoute') userRoute: Route,
-    @inject('DefaultRoute') defaultRoute: Route,
-    @inject('Logger') logger: Logger,
-  ) {
-    if (!defaultRoute) {
-      throw new Error('App :: Cannot access to DefaultRoute');
-    }
+dotenv.config({ path: configPath });
 
-    if (!userRoute) {
-      throw new Error('App :: Cannot access to UserRoute');
-    }
+const environmentMode: string = process.env.NODE_ENV || 'production';
+// eslint-disable-next-line no-console
+console.info(`Started on ${environmentMode} mode`);
+const isProd = environmentMode === 'production';
 
-    this.app.use(urlencoded({ extended: false }));
-    this.app.use(json());
+const loggerOptions: LoggerOptions = {
+  level: isProd ? 'info' : 'debug',
+  format: format.combine(
+    format.timestamp({
+      format: 'DD/MM/YY HH:mm:ss'
+    }),
+    format.errors({ stack: true }),
+    format.splat(),
+    format.json()
+  ),
+  transports: isProd
+    ? []
+    : [
+      new transports.Console({
+        format: format.combine(
+          format.colorize(),
+          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+          format.printf(({ timestamp, level, message }) => `${timestamp} ${level}: ${message}`)
+        )
+      })
+    ]
+};
 
-    this.app.use('/api/user', userRoute.getRouter());
-    this.app.use('*', defaultRoute.getRouter());
+// Logging DI resolutions
+container.registerInstance<Logger>('Logger', createLogger(loggerOptions));
 
-    this.app.listen(this.port, () => {
-      logger?.info(`⚡️[server]: Server is running at http://localhost:${this.port}`);
-    });
-  }
-}
+// Configuration DI resolutions
+container.registerInstance<string>('DbConnection', process.env.MONGO_DB_CONNECTION || '');
 
-export default App;
+// Generic DI resolutions
+container.registerSingleton<StatusRoute>('StatusRoute', StatusRoute);
+container.registerSingleton<DefaultRoute>('DefaultRoute', DefaultRoute);
+
+// User domain DI resolutions
+container.registerSingleton<UserModelMapper>('UserMapper', UserMapper);
+container.registerInstance<UserEntityModel>('UserModel', UserModel);
+container.registerSingleton<UserEntityRepository>('UserRepository', UserRepository);
+container.registerSingleton<CreateUserUseCase>('CreateUserUseCase', CreateUserUseCase);
+container.registerSingleton<RetrieveUsersUseCase>('RetrieveUsersUseCase', RetrieveUsersUseCase);
+container.registerSingleton<UserModelService>('UserService', UserService);
+container.registerSingleton<UserModelController>('UserController', UserController);
+container.registerSingleton<UserRoute>('UserRoute', UserRoute);
+
+// Database DI resolutions
+container.registerSingleton<MongoDBConnection>('MongoDBConnection', MongoDBConnection);
+
+// Connect to database
+container.resolve<MongoDBConnection>(MongoDBConnection);
+
+const app = container.resolve<App>(App);
+
+export default app;

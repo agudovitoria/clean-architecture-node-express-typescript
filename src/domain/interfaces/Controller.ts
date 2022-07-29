@@ -3,7 +3,7 @@ interface Controller<T> {
   getById(id: string): Promise<T>;
   create(model: T): Promise<T>;
   update(id: string, t: T): Promise<T>;
-  delete(id: string): Promise<boolean>;
+  delete(id: string): Promise<T>;
 }
 
 export default Controller;

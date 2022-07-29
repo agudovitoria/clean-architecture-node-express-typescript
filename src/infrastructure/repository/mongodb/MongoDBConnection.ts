@@ -1,4 +1,4 @@
-import { Connection, createConnection } from 'mongoose';
+import { Connection, ConnectionStates, connect } from 'mongoose';
 import { inject, injectable } from 'tsyringe';
 import { Logger } from 'winston';
 
@@ -7,20 +7,22 @@ class MongoDBConnection {
   private connection: Connection | null = null;
 
   private async connect(connectionString: string) {
-    this.connection = await createConnection(connectionString).asPromise();
-
-    if (this.connection?.readyState !== 1) {
+    try {
+      await connect(connectionString);
+    } catch (e) {
+      this.logger.error(e);
       throw new Error('Cannot connect to Mongo Database');
     }
   }
 
   constructor(
   @inject('DbConnection') connectionString: string,
-    @inject('Logger') logger: Logger
+    @inject('Logger') private logger: Logger
   ) {
+    logger.debug(`Connecting database on: ${connectionString}`);
     this.connect(connectionString)
-      .then(() => { logger.info('Connected successfully to server'); })
-      .catch((msg: string) => { logger.error(msg); });
+      .then(() => { this.logger.debug('MongoDBConnection :: Connected successfully to database'); })
+      .catch((msg: string) => { this.logger.error('MongoDBConnection :: Connection to database failed', msg); });
   }
 }
 

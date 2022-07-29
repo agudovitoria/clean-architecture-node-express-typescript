@@ -1,7 +1,7 @@
 class RestError extends Error {
-  code:number = 500;
+  code = 500;
 
-  constructor(code: number = 500, message: string = '') {
+  constructor(code = 500, message = '') {
     super(`Error ${code}: ${message} not found`);
   }
 }

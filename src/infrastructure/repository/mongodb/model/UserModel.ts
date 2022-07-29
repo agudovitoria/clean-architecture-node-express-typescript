@@ -1,4 +1,4 @@
-import { model, Schema } from 'mongoose';
+import { Model, model, Schema } from 'mongoose';
 import UserEntity from '../../../../domain/entity/UserEntity';
 
 class UserSchema extends Schema<UserEntity> {
@@ -25,4 +25,6 @@ class UserSchema extends Schema<UserEntity> {
   }
 }
 
-export default <UserEntityModel>(model<UserEntity>('Users', new UserSchema()));
+export type UserEntityModel = Model<UserEntity>;
+
+export default model<UserEntity>('Users', new UserSchema(), 'users');

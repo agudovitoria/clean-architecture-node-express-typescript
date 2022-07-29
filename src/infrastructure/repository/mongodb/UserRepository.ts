@@ -1,22 +1,20 @@
-import { DeleteResult } from 'mongodb';
-import { Model, ModifyResult } from 'mongoose';
 import { inject, injectable } from 'tsyringe';
 import { Logger } from 'winston';
 import Repository from '../../../domain/interfaces/Repository';
 import UserEntity from '../../../domain/entity/UserEntity';
+import Users from './model/UserModel';
 
+export interface UserEntityRepository extends Repository<UserEntity> {}
 @injectable()
-class UserRepository implements Repository<UserEntity> {
+class UserRepository implements UserEntityRepository {
   constructor(
-    @inject('UserModel') private userModel: Model<UserEntity>,
     @inject('Logger') private logger: Logger
   ) {}
 
   async retrieve(): Promise<UserEntity[]> {
     try {
-      const usersFound: UserEntity[] = await this.userModel.find().exec();
-      this.logger.debug({ usersFound });
-      return usersFound;
+      this.logger.debug('UserRepository :: Retrieving users');
+      return await Users.find({}).exec();
     } catch (e) {
       this.logger.error((e as Error)?.message);
       return [];
@@ -24,8 +22,8 @@ class UserRepository implements Repository<UserEntity> {
   }
 
   async findById(id: string): Promise<UserEntity> {
-    const userFound: UserEntity | null = await this.userModel.findById(id).exec();
-    this.logger.debug({ userFound });
+    const userFound: UserEntity | null = await Users.findById(id).exec();
+
     if (!userFound) {
       throw new Error(`Cannot find user with id ${id}`);
     }
@@ -39,7 +37,9 @@ class UserRepository implements Repository<UserEntity> {
       throw new Error('Cannot create undefined model');
     }
 
-    return this.userModel.create(entity);
+    this.logger.debug(`Persisting user: ${JSON.stringify(entity)}`);
+
+    return new Users(entity).save();
   }
 
   async update(id: string, entity: UserEntity): Promise<UserEntity> {
@@ -53,27 +53,29 @@ class UserRepository implements Repository<UserEntity> {
       throw new Error('Cannot create undefined entity');
     }
 
-    const updateResult: ModifyResult<UserEntity> | null = await this
-      .userModel
-      .findOneAndUpdate({ _id: id }, entity);
-    const updatedObject: UserEntity | null | undefined = updateResult?.value;
+    const updateResult: UserEntity | null = await Users
+      .findOneAndUpdate({ _id: id }, entity).exec();
 
-    if (!updatedObject) {
+    if (!updateResult) {
       throw new Error(`Cannot update document with id: ${id}`);
     }
 
-    return updatedObject;
+    return updateResult;
   }
 
-  async delete(id: string): Promise<boolean> {
+  async delete(id: string): Promise<UserEntity> {
     if (!id) {
       // TODO: Make domain error
       throw new Error('Cannot update model without identifier');
     }
 
-    const deletedResult: DeleteResult = await this.userModel.deleteOne({ _id: id });
+    const deletedResult: UserEntity | null = await Users.findByIdAndDelete(id).exec();
 
-    return deletedResult?.deletedCount === 1 || false;
+    if (!deletedResult) {
+      throw new Error(`Cannot delete document with id: ${id}`);
+    }
+
+    return deletedResult;
   }
 }
 

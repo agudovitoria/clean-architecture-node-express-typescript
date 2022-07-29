@@ -1,6 +1,6 @@
 import { Request, Response, Router } from 'express';
 import { injectable } from 'tsyringe';
-import Route from '../../../domain/interfaces/Route';
+import Route from '../../domain/interfaces/Route';
 
 @injectable()
 class DefaultRoute implements Route {
