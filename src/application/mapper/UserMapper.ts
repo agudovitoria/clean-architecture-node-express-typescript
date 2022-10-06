@@ -5,7 +5,7 @@ import User from '../../domain/User';
 import UserEntity from '../../domain/entity/UserEntity';
 
 export type UserModelMapper = Mapper<UserDTO, User, UserEntity>;
-@injectable()
+@injectable<UserMapper>()
 class UserMapper implements UserModelMapper {
   // TODO: Validate with TS types
   validateDto(userDto: UserDTO) {

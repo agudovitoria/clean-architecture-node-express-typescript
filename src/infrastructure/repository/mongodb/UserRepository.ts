@@ -1,11 +1,11 @@
-import { inject, injectable } from 'tsyringe';
+import { inject, singleton } from 'tsyringe';
 import { Logger } from 'winston';
 import Repository from '../../../domain/interfaces/Repository';
 import UserEntity from '../../../domain/entity/UserEntity';
 import Users from './model/UserModel';
 
 export interface UserEntityRepository extends Repository<UserEntity> {}
-@injectable()
+@singleton()
 class UserRepository implements UserEntityRepository {
   constructor(
     @inject('Logger') private logger: Logger

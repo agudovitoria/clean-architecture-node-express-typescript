@@ -1,8 +1,8 @@
 import { Connection, ConnectionStates, connect } from 'mongoose';
-import { inject, injectable } from 'tsyringe';
+import { inject, singleton } from 'tsyringe';
 import { Logger } from 'winston';
 
-@injectable()
+@singleton()
 class MongoDBConnection {
   private connection: Connection | null = null;
 
