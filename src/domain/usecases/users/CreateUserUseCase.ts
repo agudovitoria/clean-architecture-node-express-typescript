@@ -1,10 +1,10 @@
 import { inject, injectable } from 'tsyringe';
 import { Logger } from 'winston';
-import UserMapper from '../../mapper/UserMapper';
-import UserEntity from '../../../domain/entity/UserEntity';
-import Repository from '../../../domain/interfaces/Repository';
-import UseCase from '../../../domain/interfaces/UseCase';
-import User from '../../../domain/User';
+import UserMapper from '../../../application/mapper/UserMapper';
+import UserEntity from '../../entity/UserEntity';
+import Repository from '../../interfaces/Repository';
+import UseCase from '../../interfaces/UseCase';
+import User from '../../User';
 
 @injectable()
 class CreateUserUseCase implements UseCase<User> {

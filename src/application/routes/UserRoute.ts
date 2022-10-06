@@ -1,8 +1,8 @@
+import { StatusCodes } from 'http-status-codes';
 import { Router, Request, Response } from 'express';
 import { inject, injectable } from 'tsyringe';
 import { Logger } from 'winston';
 import Route from '../../domain/interfaces/Route';
-import Controller from '../../domain/interfaces/Controller';
 import RestError from '../../shared/errors/RestError';
 import UserDTO from '../../domain/dto/UserDTO';
 import { UserModelController } from '../../infrastructure/rest/controllers/UserController';
@@ -24,9 +24,10 @@ class UserRoute implements Route {
         this.logger.debug('UserRoute :: Retrieving users');
         const result: Array<UserDTO> = await this.userController.getAll();
         this.logger.debug('UserRoute :: Retrieved users', result);
-        response.status(200).json({ result });
+        response.status(StatusCodes.OK).json({ result });
       } catch (e) {
-        const { code = 500, message } = (e as RestError);
+        const { code = StatusCodes.INTERNAL_SERVER_ERROR, message } = (e as RestError);
+
         response
           .status(code)
           .json({ message });

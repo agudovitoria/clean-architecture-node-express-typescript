@@ -1,7 +1,9 @@
-class RestError extends Error {
-  code = 500;
+import { StatusCodes } from 'http-status-codes';
 
-  constructor(code = 500, message = '') {
+class RestError extends Error {
+  code = StatusCodes.INTERNAL_SERVER_ERROR;
+
+  constructor(code = StatusCodes.INTERNAL_SERVER_ERROR, message = '') {
     super(`Error ${code}: ${message} not found`);
   }
 }

@@ -20,8 +20,8 @@ import UserService, { UserModelService } from './application/service/UserService
 import UserController, { UserModelController } from './infrastructure/rest/controllers/UserController';
 import UserRoute from './application/routes/UserRoute';
 import StatusRoute from './application/routes/StatusRoute';
-import RetrieveUsersUseCase from './application/usecases/users/RetrieveUsersUseCase';
-import CreateUserUseCase from './application/usecases/users/CreateUserUseCase';
+import RetrieveUsersUseCase from './domain/usecases/users/RetrieveUsersUseCase';
+import CreateUserUseCase from './domain/usecases/users/CreateUserUseCase';
 
 const configPath = path.join(__dirname, process.env.NODE_ENV ? `../.env.${process.env.NODE_ENV}` : '.env');
 

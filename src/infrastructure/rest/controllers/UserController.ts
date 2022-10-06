@@ -1,18 +1,38 @@
 import { inject, injectable } from 'tsyringe';
 import { Logger } from 'winston';
-import RetrieveUsersUseCase from '../../../application/usecases/users/RetrieveUsersUseCase';
+import RetrieveUsersUseCase from '../../../domain/usecases/users/RetrieveUsersUseCase';
 import UserService from '../../../application/service/UserService';
 import Controller from '../../../domain/interfaces/Controller';
 import UserDTO from '../../../domain/dto/UserDTO';
 import User from '../../../domain/User';
 import ParameterNotFoundError from '../../../shared/errors/ParameterNotFoundError';
 import { UserModelMapper } from '../../../application/mapper/UserMapper';
-import CreateUserUseCase from '../../../application/usecases/users/CreateUserUseCase';
+import CreateUserUseCase from '../../../domain/usecases/users/CreateUserUseCase';
+import InvalidRequestError from '../../../shared/errors/InvalidRequestError';
 
 export type UserModelController = Controller<UserDTO>;
 
 @injectable()
 class UserController implements UserModelController {
+  private assertThatUserExists(user: UserDTO): void {
+    if (!user) {
+      throw new ParameterNotFoundError('userDto');
+    }
+  }
+
+  private assertThatEmailIsValid(email: string): void {
+    if (!email) {
+      throw new ParameterNotFoundError('email');
+    }
+
+    const emailValidationRegexp = /(.+\.)+@(.+\.)+[a-z]{2-3}/;
+    const isValidEmail = (): boolean => emailValidationRegexp.test(email);
+
+    if (!isValidEmail()) {
+      throw new ParameterNotFoundError('email');
+    }
+  }
+
   constructor(
     @inject('UserService') private userService: UserService,
     @inject('RetrieveUsersUseCase') private retrieveUsersUseCase: RetrieveUsersUseCase,
@@ -39,19 +59,21 @@ class UserController implements UserModelController {
   }
 
   async create(userDto: UserDTO): Promise<UserDTO> {
-    if (!userDto) {
-      throw new ParameterNotFoundError('userDto');
+    try {
+      this.assertThatUserExists(userDto);
+    } catch (e) {
+      this.logger.error((e as Error)?.message);
+      throw new InvalidRequestError('user');
     }
 
-    // try {
-    //   this.userMapper.validateDto(userDto);
-    // } catch (e) {
-    //   this.logger.error((e as Error)?.message);
-    //   throw new InvalidRequestError('user');
-    // }
+    try {
+      this.assertThatEmailIsValid(userDto.email);
+    } catch (e) {
+      this.logger.error((e as Error)?.message);
+      throw new InvalidRequestError('email');
+    }
 
     const user: User = this.userMapper.dtoToDomain(userDto);
-
     const createdUser: User = await this.createUserUseCase.execute(user);
 
     return this.userMapper.domainToDto(createdUser);

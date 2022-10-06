@@ -4,8 +4,8 @@ import { Logger } from 'winston';
 
 import UserMapper, { UserModelMapper } from '../../../../src/application/mapper/UserMapper';
 import UserService from '../../../../src/application/service/UserService';
-import CreateUserUseCase from '../../../../src/application/usecases/users/CreateUserUseCase';
-import RetrieveUsersUseCase from '../../../../src/application/usecases/users/RetrieveUsersUseCase';
+import CreateUserUseCase from '../../../../src/domain/usecases/users/CreateUserUseCase';
+import RetrieveUsersUseCase from '../../../../src/domain/usecases/users/RetrieveUsersUseCase';
 import UserController from '../../../../src/infrastructure/rest/controllers/UserController';
 
 jest.mock('../../../../src/application/mapper/UserMapper');

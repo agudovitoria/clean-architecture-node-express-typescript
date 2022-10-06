@@ -1,4 +1,4 @@
-import { Connection, ConnectionStates, connect } from 'mongoose';
+import { Connection, connect } from 'mongoose';
 import { inject, singleton } from 'tsyringe';
 import { Logger } from 'winston';
 
